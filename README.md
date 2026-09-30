@@ -1,6 +1,7 @@
 # ai-sync
 
-**One set of skills and shared configuration for Claude Code and Codex.**
+**One set of skills and shared configuration for Claude Code and Codex, in the
+terminal and desktop apps.**
 
 Edit a skill in either assistant's directory and both see the same files. Add an
 MCP server in either client's user config and it appears in the other. Run once,
@@ -8,6 +9,54 @@ or install a small background watcher to keep them aligned.
 
 This repository contains the sync tool. Your skills, MCP definitions, credentials,
 and sync history live in your own local data directory. It works without dotfiles.
+
+## CLI and desktop support
+
+One watcher serves all four **local clients on the same machine and user profile**.
+The desktop apps consume the same underlying agent files, so there is no second
+set of desktop exports to maintain.
+
+| Client | MCP configuration | Skill directory | Shared instruction destination |
+| --- | --- | --- | --- |
+| Claude Code CLI (`claude`, or your `cc` alias) | `~/.claude.json` | `~/.claude/skills/` | `~/.claude/CLAUDE.md` |
+| Claude desktop **Code tab**, local sessions | Same Claude Code files | Same Claude Code skills | Same Claude Code instructions |
+| Codex CLI (`codex`) | `~/.codex/config.toml` | `~/.agents/skills/` | `~/.codex/AGENTS.md` |
+| Codex desktop / Codex in the ChatGPT desktop app, local host | Same Codex config | Same Codex skills | Same Codex instructions |
+
+Sources: [Claude Code desktop shared configuration](https://code.claude.com/docs/en/desktop#shared-configuration),
+[Codex app/CLI MCP configuration](https://learn.chatgpt.com/docs/extend/mcp),
+[Codex skill discovery](https://learn.chatgpt.com/docs/build-skills), and
+[Codex agent instructions](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+Verified against official documentation on September 30, 2026.
+
+### Set up once for all four
+
+1. Install below, then run `ai-sync status` and resolve any conflicts.
+2. Run `ai-sync once`, then `ai-sync service install` for continuous updates.
+3. Use the same home/profile in your CLI and desktop apps. A shell-only
+   `CODEX_HOME` or `CLAUDE_CONFIG_DIR` override can point the CLI somewhere else;
+   match ai-sync's profile flags to the files the apps actually use.
+4. Open a fresh local session in each app. In Codex's MCP settings, use Restart
+   after changing server configuration; complete each client's authentication.
+
+For desktop-launched stdio servers, prefer absolute executable paths and make
+required environment variables available to the client launching the server.
+ai-sync copies definitions; it does not install those executables or supply a
+terminal's environment to GUI processes.
+
+### Scope and desktop differences
+
+Claude's Code tab can also load `claude_desktop_config.json`, whose same-name
+servers override the shared user config. ai-sync does not write that file.
+Check for competing definitions there if Code and CLI disagree. This support
+covers **Claude Code**, not a synchronization layer for Chat or Cowork.
+See [Claude's desktop MCP precedence](https://code.claude.com/docs/en/desktop#mcp-servers-from-the-claude-desktop-chat-app).
+
+The synchronized files belong to one host. An SSH/remote agent needs its own
+installation on that host; cloud sessions and web connectors are not configured
+by your laptop's watcher. Project overrides and organization policies can also
+change a session's effective setup. Native Windows is not supported by ai-sync;
+its supported platforms are macOS and Linux.
 
 ## Install
 
@@ -198,6 +247,32 @@ with the backup manifest reported for manual recovery. A whole multi-file batch 
 **not crash-atomic**. After a power loss or process kill, stop the watcher, inspect
 the latest backup manifest, restore affected files as needed, and preview again.
 Do not run two different sync tools against these same client files.
+
+## Keep the tool in dotfiles without copying its source
+
+Clone ai-sync as its own repository, then track a symlink from dotfiles:
+
+```sh
+git clone https://github.com/jeffdhooton/ai-sync.git ~/workspace/ai-sync
+ln -s ../workspace/ai-sync ~/dotfiles/ai-sync
+uv tool install --editable ~/workspace/ai-sync
+git -C ~/dotfiles add ai-sync
+```
+
+These commands assume `~/dotfiles/ai-sync` is unused and both directories live
+under the same home. If the checkout already exists, use it instead of cloning
+again. Dotfiles tracks the symlink; source changes are committed in ai-sync:
+
+```sh
+git -C ~/dotfiles/ai-sync status
+git -C ~/dotfiles/ai-sync remote -v
+```
+
+Add the clone and editable installation to your dotfiles bootstrap. Keep shared
+user data in the separate store described above. Update the tool with
+`git -C ~/workspace/ai-sync pull --ff-only`; rerun `uv tool install --reinstall
+--editable ~/workspace/ai-sync` if dependencies or entry points change, then
+restart its watcher. Installing the CLI does not itself start a sync service.
 
 ## Moving from a dotfiles script
 
