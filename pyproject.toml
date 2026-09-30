@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "claude-codex-sync"
+version = "0.1.0"
+description = "Keep Claude Code and Codex skills, MCP servers, and shared instructions in sync."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["tomlkit>=0.13,<1"]
+
+[project.scripts]
+ai-sync = "ai_sync.cli:main"
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["ai_sync"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project.urls]
+Repository = "https://github.com/jeffdhooton/ai-sync"
+Issues = "https://github.com/jeffdhooton/ai-sync/issues"

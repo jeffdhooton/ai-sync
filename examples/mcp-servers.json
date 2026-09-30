@@ -1,0 +1,6 @@
+{
+  "example": {
+    "url": "https://example.com/mcp",
+    "bearer_token_env_var": "EXAMPLE_API_TOKEN"
+  }
+}
